@@ -1,0 +1,16 @@
+# Agent worktrees / local tooling
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+web/dist/
+
+# Generated contract artifacts (Zod is generated from tool-result.schema.json)
+contract/zod/

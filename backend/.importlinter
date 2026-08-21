@@ -1,0 +1,50 @@
+[importlinter]
+include_external_packages = True
+root_packages =
+    contract
+    rules_core
+    rules_data
+    corpus_query
+    corpus_ingest
+    mcp_server
+    agui
+    agent
+    shell
+
+[importlinter:contract:1]
+name = rules_core is pure: no contract, no adapters, no DB, no clock/env/randomness (ADR-0002 §3, §7)
+type = forbidden
+source_modules =
+    rules_core
+forbidden_modules =
+    contract
+    mcp_server
+    agent
+    shell
+    agui
+    corpus_query
+    corpus_ingest
+    sqlite3
+    sqlalchemy
+    psycopg
+    psycopg2
+    asyncpg
+    httpx
+    datetime
+    time
+    random
+    secrets
+    os
+
+[importlinter:contract:2]
+name = the DB pool is quarantined in corpus_query (ADR-0002 §7)
+type = forbidden
+source_modules =
+    rules_core
+    mcp_server.rules
+forbidden_modules =
+    sqlite3
+    sqlalchemy
+    psycopg
+    psycopg2
+    asyncpg

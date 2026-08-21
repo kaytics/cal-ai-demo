@@ -1,0 +1,20 @@
+# Demo City local code — SYNTHETIC (not a real jurisdiction).
+# Rules are DATA, not code (foundations #8). rulesetVersion is tied to this file.
+version: "demo-city-2026.08"
+
+setbacks:
+  front:
+    min_ft: 20
+    authority:
+      cite: "Demo City Muni Code §12.04.030(A)"
+      kind: "local_code"
+  side:
+    min_ft: 5
+    authority:
+      cite: "Demo City Muni Code §12.04.030(B)"
+      kind: "local_code"
+  rear:
+    min_ft: 15
+    authority:
+      cite: "Demo City Muni Code §12.04.030(C)"
+      kind: "local_code"

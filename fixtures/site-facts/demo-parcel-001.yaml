@@ -1,0 +1,11 @@
+# A committed site-facts parcel (foundations: ~8 committed parcels). SYNTHETIC.
+parcel_id: "DEMO-001"
+address: "123 Example Ave, Demo City, CA"
+zone: "R-1"
+lot:
+  width_ft: 50
+  depth_ft: 120
+existing:
+  front_setback_ft: 22
+  side_setback_ft: 4
+  rear_setback_ft: 16

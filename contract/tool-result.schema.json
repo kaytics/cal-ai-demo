@@ -1,0 +1,403 @@
+{
+  "$defs": {
+    "AbstainResult": {
+      "additionalProperties": false,
+      "description": "The first-class refusal. `missing` names the exact fields needed.",
+      "properties": {
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "authority": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Authority"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Authority"
+        },
+        "verdict": {
+          "const": "insufficient_input",
+          "default": "insufficient_input",
+          "title": "Verdict",
+          "type": "string"
+        },
+        "responseMode": {
+          "const": "ABSTAIN",
+          "default": "ABSTAIN",
+          "title": "Responsemode",
+          "type": "string"
+        },
+        "missing": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Missing",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tool",
+        "version",
+        "timestamp",
+        "missing"
+      ],
+      "title": "AbstainResult",
+      "type": "object"
+    },
+    "Authority": {
+      "additionalProperties": false,
+      "properties": {
+        "cite": {
+          "title": "Cite",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "statute",
+            "guidance",
+            "local_code"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "cite",
+        "kind"
+      ],
+      "title": "Authority",
+      "type": "object"
+    },
+    "ComputedResult": {
+      "additionalProperties": false,
+      "description": "Arithmetic pass/fail with a structured trace (rules.* / parcel.*).",
+      "properties": {
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "authority": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Authority"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Authority"
+        },
+        "verdict": {
+          "enum": [
+            "pass",
+            "fail"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "responseMode": {
+          "enum": [
+            "COMPUTED",
+            "MIXED"
+          ],
+          "title": "Responsemode",
+          "type": "string"
+        },
+        "proposed": {
+          "title": "Proposed",
+          "type": "number"
+        },
+        "required": {
+          "title": "Required",
+          "type": "number"
+        },
+        "margin": {
+          "title": "Margin",
+          "type": "number"
+        },
+        "trace": {
+          "items": {
+            "$ref": "#/$defs/TraceStep"
+          },
+          "minItems": 1,
+          "title": "Trace",
+          "type": "array"
+        },
+        "preemption": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Preemption"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "tool",
+        "version",
+        "timestamp",
+        "verdict",
+        "responseMode",
+        "proposed",
+        "required",
+        "margin",
+        "trace"
+      ],
+      "title": "ComputedResult",
+      "type": "object"
+    },
+    "Preemption": {
+      "additionalProperties": false,
+      "properties": {
+        "local": {
+          "$ref": "#/$defs/_PreemptionSide"
+        },
+        "controlling": {
+          "$ref": "#/$defs/_PreemptionSide"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "local",
+        "controlling",
+        "note"
+      ],
+      "title": "Preemption",
+      "type": "object"
+    },
+    "SourcedResult": {
+      "additionalProperties": false,
+      "description": "Answer backed by citations, no arithmetic (corpus.*).",
+      "properties": {
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "authority": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Authority"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Authority"
+        },
+        "verdict": {
+          "const": "answered",
+          "title": "Verdict",
+          "type": "string"
+        },
+        "responseMode": {
+          "enum": [
+            "SOURCED",
+            "MIXED"
+          ],
+          "title": "Responsemode",
+          "type": "string"
+        },
+        "answer": {
+          "title": "Answer",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/Authority"
+          },
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tool",
+        "version",
+        "timestamp",
+        "verdict",
+        "responseMode",
+        "answer",
+        "citations"
+      ],
+      "title": "SourcedResult",
+      "type": "object"
+    },
+    "TraceStep": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "expression": {
+          "title": "Expression",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "label",
+        "expression",
+        "value"
+      ],
+      "title": "TraceStep",
+      "type": "object"
+    },
+    "Version": {
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "title": "Image",
+          "type": "string"
+        },
+        "ruleset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ruleset"
+        },
+        "corpus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Corpus"
+        },
+        "fixtures": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixtures"
+        }
+      },
+      "required": [
+        "image"
+      ],
+      "title": "Version",
+      "type": "object"
+    },
+    "_PreemptionSide": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "authority": {
+          "$ref": "#/$defs/Authority"
+        }
+      },
+      "required": [
+        "value",
+        "authority"
+      ],
+      "title": "_PreemptionSide",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "answered": "#/$defs/SourcedResult",
+      "fail": "#/$defs/ComputedResult",
+      "insufficient_input": "#/$defs/AbstainResult",
+      "pass": "#/$defs/ComputedResult"
+    },
+    "propertyName": "verdict"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/AbstainResult"
+    },
+    {
+      "$ref": "#/$defs/ComputedResult"
+    },
+    {
+      "$ref": "#/$defs/SourcedResult"
+    }
+  ],
+  "title": "ToolResult",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

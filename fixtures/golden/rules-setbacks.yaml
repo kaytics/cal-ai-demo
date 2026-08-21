@@ -1,0 +1,26 @@
+# Golden cases for rules.check_setbacks. Structured so each case asserts on the
+# domain outcome (verdict, required, margin, preemption, abstain/missing).
+cases:
+  - name: side passes exactly at the state-preempted cap
+    inputs: { setback: side, proposed_ft: 4 }
+    expect: { verdict: pass, required: 4, margin: 0, preemption: true }
+
+  - name: side fails below the state-preempted cap
+    inputs: { setback: side, proposed_ft: 3 }
+    expect: { verdict: fail, required: 4, margin: -1, preemption: true }
+
+  - name: front passes, no preemption
+    inputs: { setback: front, proposed_ft: 25 }
+    expect: { verdict: pass, required: 20, margin: 5, preemption: false }
+
+  - name: front fails, no preemption
+    inputs: { setback: front, proposed_ft: 18 }
+    expect: { verdict: fail, required: 20, margin: -2, preemption: false }
+
+  - name: abstain when proposed_ft missing
+    inputs: { setback: front }
+    expect: { abstain: true, missing: [proposed_ft] }
+
+  - name: abstain when setback invalid
+    inputs: { setback: sideways, proposed_ft: 5 }
+    expect: { abstain: true, missing: [setback] }
