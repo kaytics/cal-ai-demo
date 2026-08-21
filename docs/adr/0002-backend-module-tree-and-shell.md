@@ -10,6 +10,17 @@
   chunk-01 decisions [#2](https://github.com/kaytics/cal-ai-demo/issues/2) (TS `@ag-ui/*` emitter)
   and [#4](https://github.com/kaytics/cal-ai-demo/issues/4) (single shared *Zod* schema).
 
+## Implementation status
+
+The decision below stands in full. The **on-disk tree is deliberately a subset** while we
+iterate the rules engine first — deferred, not reversed:
+
+- **Present (runnable spine):** `contract`, `rules_core`, `rules_data`, `mcp_server`, `agui`,
+  `agent`, `shell` + golden tests. The rules vertical slice runs end-to-end over real MCP.
+- **Deferred:** `web/` (frontend chunk), the generated `contract/` boundary + its exporter (returns
+  with `web/`), and `corpus_ingest` / `corpus_query` (chunk C). Rebuild from this ADR when their
+  chunks start.
+
 ## Context
 
 The stack is now **polyglot**: a **Python + FastMCP** backend and a **TypeScript (Vite/React)**

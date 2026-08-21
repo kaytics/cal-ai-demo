@@ -10,6 +10,10 @@ Domain language: **[CONTEXT.md](CONTEXT.md)**.
 
 ## Layout
 
+Current tree is the **runnable spine** — the rules vertical slice + AG-UI delivery. Web, the
+generated contract boundary, and corpus are **deferred** to their chunks (see ADR-0002 §
+Implementation status); the full tree still lives in ADR-0002.
+
 ```
 backend/    one uv project (Python + FastMCP). Flat top-level packages under src/:
               contract/     Pydantic canonical models (ADR-0001)
@@ -19,10 +23,7 @@ backend/    one uv project (Python + FastMCP). Flat top-level packages under src
               agui/         two-method AG-UI emitter (ag-ui-protocol) + fail-closed gate
               agent/        LLM loop + MCP client (streamable-HTTP)
               shell/        ASGI app: AG-UI SSE endpoint the frontend connects to
-              corpus_*/     retrieval (chunk C, stubs)
-web/        Vite/React SPA — hand-rolled + @ag-ui/client
-contract/   GENERATED boundary: tool-result.schema.json (from Pydantic) -> zod/
-fixtures/   site-facts + golden cases
+fixtures/   golden cases
 docs/       CONTEXT.md, adr/, wayfinder/, agents/
 ```
 
@@ -32,20 +33,15 @@ Two processes (`mcp-server` + `shell`) run in one container.
 ## Run (dev)
 
 ```sh
-# backend
 cd backend
 uv sync --extra agent
 uv run mcp-server            # FastMCP server on :8000  (terminal 1)
 uv run shell                 # ASGI shell   on :8080  (terminal 2)
 
-# frontend
-cd ../web
-npm install
-npm run dev                  # Vite on :5173, proxies /agui -> :8080
-
-# regenerate the contract boundary after changing the Pydantic models
-cd ../backend && uv run python scripts/export_schema.py
-cd ../contract && npm install && npm run gen
+# exercise the AG-UI stream end-to-end:
+curl -sN -X POST http://127.0.0.1:8080/agui/run \
+  -H 'content-type: application/json' \
+  -d '{"tool_name":"rules.check_setbacks","arguments":{"setback":"side","proposed_ft":4}}'
 ```
 
 ## Test & enforce

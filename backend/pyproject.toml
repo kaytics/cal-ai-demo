@@ -25,7 +25,6 @@ dev = [
 [project.scripts]
 mcp-server = "mcp_server.__main__:main"
 shell = "shell.__main__:main"
-corpus-ingest = "corpus_ingest.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -39,8 +38,6 @@ packages = [
     "src/contract",
     "src/rules_core",
     "src/rules_data",
-    "src/corpus_ingest",
-    "src/corpus_query",
     "src/mcp_server",
     "src/agui",
     "src/agent",

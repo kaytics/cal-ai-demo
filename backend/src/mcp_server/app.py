@@ -1,5 +1,7 @@
-"""Build the FastMCP server hosting all namespaces (single-server topology,
-ADR-0002 §5/§7). corpus.* is registered separately and owns the only DB pool.
+"""Build the FastMCP server (single-server topology, ADR-0002 §5/§7).
+
+Currently hosts rules.*. parcel.* (chunk 04) and corpus.* (chunk C) register
+here later; corpus is the only module that may own a DB pool.
 """
 
 from __future__ import annotations
