@@ -6,7 +6,7 @@ The union is discriminated on `verdict`.
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 from pydantic.alias_generators import to_camel
@@ -99,7 +99,7 @@ class SourcedResult(_Base):
 
 
 ToolResult = Annotated[
-    Union[AbstainResult, ComputedResult, SourcedResult],
+    AbstainResult | ComputedResult | SourcedResult,
     Field(discriminator="verdict"),
 ]
 

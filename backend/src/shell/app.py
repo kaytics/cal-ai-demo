@@ -30,7 +30,7 @@ async def agui_run(request: Request) -> StreamingResponse:
         arguments=body.get("arguments", {}),
         intro=body.get("intro", "Checking the applicable rule…"),
     )
-    emitter = ChannelEmitter(accept=request.headers.get("accept"))
+    emitter = ChannelEmitter()
     stream = run_turn(
         plan,
         thread_id=body.get("thread_id", str(uuid.uuid4())),

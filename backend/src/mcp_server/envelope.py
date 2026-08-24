@@ -8,7 +8,7 @@ core.
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import rules_data
 from contract import (
@@ -27,7 +27,7 @@ from rules_core.domain import TraceStep as DomainTraceStep
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def current_version() -> Version:

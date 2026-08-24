@@ -5,7 +5,7 @@ image version, tool name). Those are the adapter's job (ADR-0002 §3).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, Union
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -51,4 +51,4 @@ class InsufficientInput:
     missing: list[str]
 
 
-Outcome = Union[ComputedOutcome, InsufficientInput]
+Outcome = ComputedOutcome | InsufficientInput

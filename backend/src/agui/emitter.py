@@ -24,8 +24,8 @@ class ChannelEmitter:
     else may put content on the wire, so numbers can only travel in a validated
     tool result."""
 
-    def __init__(self, accept: str | None = None) -> None:
-        self._encoder = EventEncoder(accept=accept)
+    def __init__(self) -> None:
+        self._encoder = EventEncoder(accept="")
 
     @property
     def content_type(self) -> str:
@@ -59,7 +59,9 @@ class ChannelEmitter:
     def emit_tool_args(self, *, tool_call_id: str, args_json: str) -> str:
         return self._encoder.encode(
             ToolCallArgsEvent(
-                type=EventType.TOOL_CALL_ARGS, tool_call_id=tool_call_id, delta=args_json
+                type=EventType.TOOL_CALL_ARGS,
+                tool_call_id=tool_call_id,
+                delta=args_json,
             )
         )
 
@@ -68,7 +70,9 @@ class ChannelEmitter:
             ToolCallEndEvent(type=EventType.TOOL_CALL_END, tool_call_id=tool_call_id)
         )
 
-    def emit_verdict(self, *, message_id: str, tool_call_id: str, result_json: str) -> str:
+    def emit_verdict(
+        self, *, message_id: str, tool_call_id: str, result_json: str
+    ) -> str:
         """Validate a tool-result JSON string (fail-closed) and frame it on
         TOOL_CALL_RESULT.content. Raises pydantic.ValidationError on a malformed
         payload — it never reaches the client."""
@@ -84,7 +88,9 @@ class ChannelEmitter:
     def emit_prose_start(self, *, message_id: str) -> str:
         return self._encoder.encode(
             TextMessageStartEvent(
-                type=EventType.TEXT_MESSAGE_START, message_id=message_id, role="assistant"
+                type=EventType.TEXT_MESSAGE_START,
+                message_id=message_id,
+                role="assistant",
             )
         )
 

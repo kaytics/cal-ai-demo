@@ -41,7 +41,7 @@ uv run shell                 # ASGI shell   on :8080  (terminal 2)
 # exercise the AG-UI stream end-to-end:
 curl -sN -X POST http://127.0.0.1:8080/agui/run \
   -H 'content-type: application/json' \
-  -d '{"tool_name":"rules.check_setbacks","arguments":{"setback":"side","proposed_ft":4}}'
+  -d '{"tool_name":"rules_check_setbacks","arguments":{"setback":"side","proposed_ft":4}}'
 ```
 
 ## Test & enforce

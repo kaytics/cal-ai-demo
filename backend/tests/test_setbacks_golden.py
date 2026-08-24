@@ -9,9 +9,7 @@ import yaml
 
 from rules_core import ComputedOutcome, InsufficientInput, check_setbacks
 
-_GOLDEN = (
-    Path(__file__).parents[2] / "fixtures" / "golden" / "rules-setbacks.yaml"
-)
+_GOLDEN = Path(__file__).parents[2] / "fixtures" / "golden" / "rules-setbacks.yaml"
 _CASES = yaml.safe_load(_GOLDEN.read_text(encoding="utf-8"))["cases"]
 
 

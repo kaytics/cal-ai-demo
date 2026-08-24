@@ -14,20 +14,23 @@ from pydantic import Field
 import rules_core
 from mcp_server.envelope import to_json
 
+rule = FastMCP("Rules")
 
-def register(mcp: FastMCP) -> None:
-    @mcp.tool(name="rules.check_setbacks")
-    def check_setbacks(
-        setback: Annotated[
-            str, Field(description="Which setback: 'front', 'side', or 'rear'.")
-        ],
-        proposed_ft: Annotated[
-            float, Field(description="Proposed setback distance in feet.")
-        ],
-    ) -> str:
-        """Check a proposed setback against the controlling minimum (local +
-        state preemption). Returns the tool-result contract as a JSON string."""
-        outcome = rules_core.check_setbacks(
-            {"setback": setback, "proposed_ft": proposed_ft}
-        )
-        return to_json("rules.check_setbacks", outcome)
+
+@rule.tool
+def check_setbacks(
+    setback: Annotated[
+        str, Field(description="Which setback: 'front', 'side', or 'rear'.")
+    ],
+    proposed_ft: Annotated[
+        float, Field(description="Proposed setback distance in feet.")
+    ],
+) -> str:
+    """Check a proposed setback against the controlling minimum (local +
+    state preemption). Returns the tool-result contract as a JSON string."""
+    outcome = rules_core.check_setbacks(
+        {"setback": setback, "proposed_ft": proposed_ft}
+    )
+    # Wire name is `rules_check_setbacks` (mount namespace + underscore separator,
+    # ADR-0002). The `tool` field on the contract matches it.
+    return to_json("rules_check_setbacks", outcome)

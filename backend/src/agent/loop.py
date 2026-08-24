@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from agent.mcp_client import McpToolClient
 from agui import ChannelEmitter
@@ -24,7 +24,7 @@ class ToolPlan:
     intro: str = "Checking the applicable rule…"
 
 
-def plan_turn(user_input: str) -> ToolPlan:  # noqa: ARG001
+def plan_turn(user_input: str) -> ToolPlan:
     """TODO(chunk 02): replace with a Bedrock tool-use planner over `user_input`.
 
     For now, the shell passes a structured request (deterministic form mode),

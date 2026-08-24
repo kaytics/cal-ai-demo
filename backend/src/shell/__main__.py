@@ -1,6 +1,6 @@
 """Entry point: run the shell ASGI app.
 
-    uv run shell
+uv run shell
 """
 
 from __future__ import annotations

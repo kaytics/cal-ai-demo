@@ -1,6 +1,6 @@
 """Entry point: run the FastMCP server over streamable-HTTP (ADR-0002 §4/§5).
 
-    uv run mcp-server
+uv run mcp-server
 """
 
 from __future__ import annotations

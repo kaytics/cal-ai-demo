@@ -65,6 +65,16 @@ tool call crosses the MCP wire — the demo exercises MCP end-to-end rather than
 
 Two console-script entry points; the container runs both.
 
+### 5a. Tool wire names — underscore, via mounted sub-servers
+
+Each namespace is its own `FastMCP` sub-server (`rules = FastMCP("Rules")`) mounted onto the root
+with a namespace prefix (`app.mount(rule, namespace="rules")`). FastMCP joins the prefix to the tool
+name with an **underscore**, so the wire name is **`rules_check_setbacks`**, not the dotted
+`rules.check_setbacks`. This keeps foundations #15's intent (tool names are always namespaced, never
+flat) — only the separator glyph differs, and it is fixed by FastMCP's mount, not chosen. The
+contract's `tool` field is stamped to match the wire name. Callers (shell request body, agent,
+future frontend) use the underscore form.
+
 ### 6. Emitter
 Use the library **`ag-ui-protocol`** (pin `0.1.20`), wrapped in a project-owned two-method emitter:
 `emit_verdict` → `TOOL_CALL_RESULT` only; `emit_prose` → `TEXT_MESSAGE_*` only. The encoder does not

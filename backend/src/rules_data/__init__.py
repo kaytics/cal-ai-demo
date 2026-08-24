@@ -12,7 +12,7 @@ from typing import Any
 
 import yaml
 
-__all__ = ["load", "DEMO_CITY", "STATE_RULES"]
+__all__ = ["DEMO_CITY", "STATE_RULES", "load"]
 
 DEMO_CITY = "demo-city.yaml"
 STATE_RULES = "state-rules.yaml"
@@ -23,5 +23,5 @@ def load(name: str) -> dict[str, Any]:
     text = resources.files(__package__).joinpath(name).read_text(encoding="utf-8")
     data = yaml.safe_load(text)
     if not isinstance(data, dict):
-        raise ValueError(f"rule file {name!r} did not parse to a mapping")
+        raise TypeError(f"rule file {name!r} did not parse to a mapping")
     return data
