@@ -1,0 +1,16 @@
+# California state law that can PREEMPT a local minimum (foundations: preemption).
+# Cites are real statutes; values are illustrative for the demo.
+version: "ca-state-2026.08"
+
+preemptions:
+  # State ADU law caps the side/rear setback a locality may require at 4 ft.
+  side:
+    max_local_required_ft: 4
+    authority:
+      cite: "Cal. Gov. Code §66323(a)(1)"
+      kind: "statute"
+  rear:
+    max_local_required_ft: 4
+    authority:
+      cite: "Cal. Gov. Code §66323(a)(1)"
+      kind: "statute"
