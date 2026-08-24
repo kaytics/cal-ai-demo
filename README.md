@@ -1,6 +1,6 @@
 # CA AI Permitting — Showcase Demo
 
-A polyglot demo: a **Python + FastMCP** backend and a **TypeScript (Vite/React)** frontend,
+A **Python + FastMCP** backend and a **TypeScript (Vite/React)** frontend,
 wired over **AG-UI**. The point it shows: *the model never produces a number, verdict, or badge* —
 those are server-set fields on a validated tool-result contract, carried on one channel.
 
