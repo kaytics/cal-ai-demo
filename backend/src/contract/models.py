@@ -52,7 +52,7 @@ class Version(_Wire):
 
 
 class _Base(_Wire):
-    tool: str  # e.g. "rules.check_setbacks"
+    tool: str  # e.g. "rules_check_setbacks"
     version: Version
     timestamp: str
     authority: list[Authority] | None = None

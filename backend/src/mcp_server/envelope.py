@@ -95,4 +95,4 @@ def to_tool_result(tool: str, outcome: Outcome) -> ToolResult:
 def to_json(tool: str, outcome: Outcome) -> str:
     """The value carried on AG-UI TOOL_CALL_RESULT.content: a JSON string."""
     result = to_tool_result(tool, outcome)
-    return result.model_dump_json(by_alias=True)  # type: ignore[attr-defined]
+    return result.model_dump_json(by_alias=True, exclude_none=True)  # type: ignore[attr-defined]

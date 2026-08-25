@@ -3,12 +3,25 @@ malformed payloads (ADR-0001 §4)."""
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from pydantic import ValidationError
 
 from contract import AbstainResult, ComputedResult, parse_tool_result
 from mcp_server.envelope import to_json, to_tool_result
 from rules_core import check_setbacks
+
+
+def _null_paths(node: object, path: str = "$") -> list[str]:
+    """Every JSON path whose value is `null`, recursively."""
+    if node is None:
+        return [path]
+    if isinstance(node, dict):
+        return [p for k, v in node.items() for p in _null_paths(v, f"{path}.{k}")]
+    if isinstance(node, list):
+        return [p for i, v in enumerate(node) for p in _null_paths(v, f"{path}[{i}]")]
+    return []
 
 
 def test_adapter_maps_computed_with_preemption() -> None:
@@ -37,6 +50,18 @@ def test_to_json_roundtrips_through_the_gate() -> None:
     # camelCase on the wire; re-parses cleanly through the shared gate.
     assert '"responseMode"' in payload
     parse_tool_result(payload)
+
+
+def test_wire_omits_none_never_serializes_null() -> None:
+    # `front/25`: no preemption, no citations, corpus/fixtures unset — every
+    # optional here is None, so a naive dump would emit `null`s the strict
+    # `.optional()` Zod client rejects (ticket #11, decision #2).
+    payload = to_json("rules.check_setbacks", check_setbacks({"setback": "front", "proposed_ft": 25}))
+    data = json.loads(payload)
+    assert _null_paths(data) == [], f"wire carried null(s): {_null_paths(data)}"
+    # Absent, not null: the unset optionals are dropped from the object entirely.
+    assert "preemption" not in data
+    assert "corpus" not in data["version"]
 
 
 def test_gate_rejects_malformed() -> None:
