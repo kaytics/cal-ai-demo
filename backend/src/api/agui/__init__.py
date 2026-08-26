@@ -7,6 +7,6 @@ Pydantic fail-closed gate (contract.parse_tool_result) before serializing the
 result string into `content` — the receive-side validation of ADR-0001 §4.
 """
 
-from agui.emitter import ChannelEmitter
+from api.agui.emitter import ChannelEmitter
 
 __all__ = ["ChannelEmitter"]

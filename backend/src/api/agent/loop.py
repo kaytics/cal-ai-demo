@@ -11,8 +11,8 @@ import json
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 
-from agent.mcp_client import McpToolClient
-from agui import ChannelEmitter
+from api.agent.mcp_client import McpToolClient
+from api.agui import ChannelEmitter
 
 
 @dataclass(frozen=True)

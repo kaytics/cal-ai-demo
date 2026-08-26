@@ -25,7 +25,7 @@ dev = [
 
 [project.scripts]
 mcp-server = "mcp_server.__main__:main"
-shell = "shell.__main__:main"
+api = "api.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -39,9 +39,7 @@ packages = [
     "src/utils",
     "src/domains",
     "src/mcp_server",
-    "src/agui",
-    "src/agent",
-    "src/shell",
+    "src/api",
 ]
 
 [tool.pytest.ini_options]

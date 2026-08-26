@@ -1,6 +1,6 @@
 """The adapter: domain outcome -> validated wire ToolResult.
 
-This is where timestamp/version/responseMode/tool are set (never in rules_core,
+This is where timestamp/version/responseMode/tool are set (never in the domain core,
 never by the model). Uses the clock and env — legal here, forbidden in the pure
 core.
 """

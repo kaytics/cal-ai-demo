@@ -4,9 +4,7 @@ root_packages =
     utils
     domains
     mcp_server
-    agui
-    agent
-    shell
+    api
 
 [importlinter:contract:1]
 name = every domain core is pure: no contract, no adapters, no DB, no clock/env/randomness (ADR-0003 §3; ADR-0002 §3, §7)
@@ -16,9 +14,7 @@ source_modules =
 forbidden_modules =
     utils.contract
     mcp_server
-    agent
-    shell
-    agui
+    api
     sqlite3
     sqlalchemy
     psycopg

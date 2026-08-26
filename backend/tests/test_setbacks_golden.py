@@ -1,4 +1,4 @@
-"""Golden cases for the pure engine (rules_core.check_setbacks)."""
+"""Golden cases for the pure engine (domains.rules.core.check_setbacks)."""
 
 from __future__ import annotations
 

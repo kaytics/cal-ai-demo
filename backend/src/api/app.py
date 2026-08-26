@@ -9,9 +9,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, StreamingResponse
 from starlette.routing import Route
 
-from agent import McpToolClient
-from agent.loop import ToolPlan, run_turn
-from agui import ChannelEmitter
+from api.agent import McpToolClient
+from api.agent.loop import ToolPlan, run_turn
+from api.agui import ChannelEmitter
 
 
 async def health(_: Request) -> JSONResponse:
