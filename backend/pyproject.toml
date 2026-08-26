@@ -36,7 +36,7 @@ build-backend = "hatchling.build"
 # src/<pkg> -> importable top-level <pkg>.
 sources = ["src"]
 packages = [
-    "src/contract",
+    "src/utils",
     "src/rules_core",
     "src/rules_data",
     "src/mcp_server",

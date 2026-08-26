@@ -1,7 +1,7 @@
 [importlinter]
 include_external_packages = True
 root_packages =
-    contract
+    utils
     rules_core
     rules_data
     mcp_server
@@ -15,7 +15,7 @@ type = forbidden
 source_modules =
     rules_core
 forbidden_modules =
-    contract
+    utils.contract
     mcp_server
     agent
     shell

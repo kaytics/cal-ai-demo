@@ -8,9 +8,9 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from contract import AbstainResult, ComputedResult, parse_tool_result
 from mcp_server.envelope import to_json, to_tool_result
 from rules_core import check_setbacks
+from utils.contract import AbstainResult, ComputedResult, parse_tool_result
 
 
 def _null_paths(node: object, path: str = "$") -> list[str]:

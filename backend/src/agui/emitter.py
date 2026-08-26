@@ -16,7 +16,7 @@ from ag_ui.core import (
 )
 from ag_ui.encoder import EventEncoder
 
-from contract import parse_tool_result
+from utils.contract import parse_tool_result
 
 
 class ChannelEmitter:

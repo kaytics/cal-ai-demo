@@ -1,6 +1,6 @@
 # ADR-0002 — Backend module tree & shell architecture (polyglot pivot)
 
-- **Status:** Accepted
+- **Status:** Accepted — **§2 and the flat-import rule of §3 superseded by [ADR-0003](0003-domain-oriented-backend-tree.md)** (2026-08-26). The contract seam (§3), MCP topology (§4–§5a), emitter (§6), and purity safeguard (§7) all still stand; ADR-0003 only changes the on-disk shape and import paths.
 - **Date:** 2026-08-21
 - **Deciders:** wayfinder chunk 00, ticket [#9](https://github.com/kaytics/cal-ai-demo/issues/9)
   (map [#7](https://github.com/kaytics/cal-ai-demo/issues/7))
@@ -42,6 +42,10 @@ Python and TS never share a workspace manager. `backend/` is **one uv project wi
 internal packages** (not a uv workspace); `web/` is npm.
 
 ### 2. `backend/src/` module tree (flat top-level packages)
+> **Superseded by [ADR-0003](0003-domain-oriented-backend-tree.md).** The tree is now
+> domain-oriented (`api/`, `mcp_server/`, `domains/<name>/{core,data}/`, `utils/contract/`)
+> and imports are no longer flat. The package *responsibilities* below are unchanged — only
+> their location and import path moved.
 `contract/` (Pydantic canonical), `rules_core/` (pure engine), `rules_data/` (baked YAML),
 `corpus_ingest/` (offline CLI), `corpus_query/` (DB-backed retrieval, owns the DB pool),
 `mcp_server/` (FastMCP adapter), `agui/` (emitter), `agent/` (LLM loop / MCP client), `shell/`

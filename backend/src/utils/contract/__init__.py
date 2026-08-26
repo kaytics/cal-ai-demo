@@ -8,7 +8,7 @@ web frontend.
 The model NEVER sets `verdict` or `responseMode`; the mcp_server adapter does.
 """
 
-from contract.models import (
+from utils.contract.models import (
     AbstainResult,
     Authority,
     ComputedResult,
