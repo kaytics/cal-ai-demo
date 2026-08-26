@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { EventType } from "@ag-ui/core";
 import { streamAgui, type AguiEvent } from "./agui";
+import { VerdictCard } from "./VerdictCard";
 
 // One hardcoded query (#12 proves the live pipe, not the UI). A side setback of
 // 4ft trips the state-preemption COMPUTED path in the golden slice.
@@ -14,17 +15,23 @@ type Row = { seq: number; type: string; event: AguiEvent };
 
 export default function App() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [verdict, setVerdict] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function run() {
     setRows([]);
+    setVerdict(null);
     setError(null);
     setRunning(true);
     try {
       let seq = 0;
       for await (const event of streamAgui(QUERY)) {
         setRows((prev) => [...prev, { seq: seq++, type: event.type, event }]);
+        // The verdict channel carries the contract payload as a JSON string.
+        if (event.type === EventType.TOOL_CALL_RESULT && typeof event.content === "string") {
+          setVerdict(event.content);
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -44,7 +51,14 @@ export default function App() {
         {running ? "Streaming…" : "Run query"}
       </button>
       {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
-      <ol style={{ marginTop: "1.5rem", paddingLeft: 0, listStyle: "none" }}>
+      {verdict && (
+        <section style={{ marginTop: "1.5rem" }}>
+          <h2 style={{ fontSize: 15, color: "#555", margin: "0 0 0.5rem" }}>Verdict card</h2>
+          <VerdictCard content={verdict} />
+        </section>
+      )}
+      <h2 style={{ fontSize: 15, color: "#555", margin: "1.5rem 0 0.5rem" }}>Raw events</h2>
+      <ol style={{ marginTop: "0.5rem", paddingLeft: 0, listStyle: "none" }}>
         {rows.map((r) => (
           <li key={r.seq} style={{ border: "1px solid #ddd", borderRadius: 6, padding: "0.5rem 0.75rem", marginBottom: 8 }}>
             <strong>{r.type}</strong> {channelTag(r.type)}
