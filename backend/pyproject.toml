@@ -26,6 +26,7 @@ dev = [
 [project.scripts]
 mcp-server = "mcp_server.__main__:main"
 api = "api.__main__:main"
+export-schema = "utils.codegen.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
