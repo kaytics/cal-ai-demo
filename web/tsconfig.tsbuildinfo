@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/verdictcard.test.tsx","./src/verdictcard.tsx","./src/agui.ts","./src/main.tsx","./src/setuptests.ts","./vite.config.ts","../shared/tool-result.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/verdictcard.tsx","./src/agui.ts","./src/main.tsx","./tests/verdictcard.test.tsx","./tests/setup.ts","./vite.config.ts","../shared/tool-result.ts"],"version":"5.9.3"}

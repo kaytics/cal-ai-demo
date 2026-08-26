@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { VerdictCard } from "./VerdictCard";
+import { VerdictCard } from "../src/VerdictCard";
 
 // The real wire payload for the golden `side/4` case (state preemption caps the
 // local 5.0 ft minimum at 4.0 ft), produced by the Python adapter. Kept verbatim
