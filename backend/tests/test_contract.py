@@ -8,8 +8,8 @@ import json
 import pytest
 from pydantic import ValidationError
 
+from domains.rules.core import check_setbacks
 from mcp_server.envelope import to_json, to_tool_result
-from rules_core import check_setbacks
 from utils.contract import AbstainResult, ComputedResult, parse_tool_result
 
 

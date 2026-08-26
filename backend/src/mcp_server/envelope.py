@@ -10,10 +10,10 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime
 
-import rules_data
-from rules_core import ComputedOutcome, InsufficientInput, Outcome
-from rules_core.domain import AuthorityRef, PreemptionRef
-from rules_core.domain import TraceStep as DomainTraceStep
+from domains.rules import data
+from domains.rules.core import ComputedOutcome, InsufficientInput, Outcome
+from domains.rules.core.domain import AuthorityRef, PreemptionRef
+from domains.rules.core.domain import TraceStep as DomainTraceStep
 from utils.contract import (
     AbstainResult,
     Authority,
@@ -34,7 +34,7 @@ def current_version() -> Version:
     """Provenance stamped on every result (CONTEXT.md: Version)."""
     return Version(
         image=os.environ.get("IMAGE_TAG", "dev"),
-        ruleset=rules_data.load(rules_data.DEMO_CITY).get("version"),
+        ruleset=data.load(data.DEMO_CITY).get("version"),
         fixtures=os.environ.get("FIXTURES_VERSION"),
     )
 

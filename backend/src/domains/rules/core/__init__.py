@@ -1,12 +1,12 @@
 """The pure rules engine.
 
-Imports NOTHING but `rules_data` (baked YAML) and stdlib types. No contract,
+Imports NOTHING but its own `domains.rules.data` (baked YAML) and stdlib types. No contract,
 no adapters, no DB, no clock, no env, no randomness (ADR-0002 §3, §7; enforced
 by import-linter). Returns a DOMAIN result — the adapter maps it to the wire
 contract and stamps timestamp/version/responseMode.
 """
 
-from rules_core.domain import (
+from domains.rules.core.domain import (
     AuthorityRef,
     ComputedOutcome,
     InsufficientInput,
@@ -14,7 +14,7 @@ from rules_core.domain import (
     PreemptionRef,
     TraceStep,
 )
-from rules_core.setbacks import check_setbacks
+from domains.rules.core.setbacks import check_setbacks
 
 __all__ = [
     "AuthorityRef",

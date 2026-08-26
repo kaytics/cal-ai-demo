@@ -2,18 +2,17 @@
 include_external_packages = True
 root_packages =
     utils
-    rules_core
-    rules_data
+    domains
     mcp_server
     agui
     agent
     shell
 
 [importlinter:contract:1]
-name = rules_core is pure: no contract, no adapters, no DB, no clock/env/randomness (ADR-0002 §3, §7)
+name = every domain core is pure: no contract, no adapters, no DB, no clock/env/randomness (ADR-0003 §3; ADR-0002 §3, §7)
 type = forbidden
 source_modules =
-    rules_core
+    domains.*.core
 forbidden_modules =
     utils.contract
     mcp_server
@@ -33,10 +32,10 @@ forbidden_modules =
     os
 
 [importlinter:contract:2]
-name = no DB driver in the rules namespace (ADR-0002 §7; the pool belongs to corpus, deferred)
+name = no DB driver in the domain cores or the rules adapter (ADR-0002 §7; the pool belongs to corpus, deferred)
 type = forbidden
 source_modules =
-    rules_core
+    domains.*.core
     mcp_server.rules
 forbidden_modules =
     sqlite3

@@ -37,8 +37,7 @@ build-backend = "hatchling.build"
 sources = ["src"]
 packages = [
     "src/utils",
-    "src/rules_core",
-    "src/rules_data",
+    "src/domains",
     "src/mcp_server",
     "src/agui",
     "src/agent",

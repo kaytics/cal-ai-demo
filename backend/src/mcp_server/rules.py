@@ -11,7 +11,7 @@ from typing import Annotated
 from fastmcp import FastMCP
 from pydantic import Field
 
-import rules_core
+from domains.rules import core
 from mcp_server.envelope import to_json
 
 rule = FastMCP("Rules")
@@ -28,7 +28,7 @@ def check_setbacks(
 ) -> str:
     """Check a proposed setback against the controlling minimum (local +
     state preemption). Returns the tool-result contract as a JSON string."""
-    outcome = rules_core.check_setbacks(
+    outcome = core.check_setbacks(
         {"setback": setback, "proposed_ft": proposed_ft}
     )
     # Wire name is `rules_check_setbacks` (mount namespace + underscore separator,

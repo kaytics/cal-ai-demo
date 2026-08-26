@@ -2,15 +2,15 @@
 
 Minimum-setback check with state preemption. Margin convention (CONTEXT.md):
 for minimums, margin = proposed - required; negative fails; proposed == required
-passes. Pure: reads only baked YAML via rules_data.
+passes. Pure: reads only baked YAML via its `domains.rules.data` package.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-import rules_data
-from rules_core.domain import (
+from domains.rules import data
+from domains.rules.core.domain import (
     AuthorityRef,
     ComputedOutcome,
     InsufficientInput,
@@ -43,7 +43,7 @@ def check_setbacks(inputs: dict[str, Any]) -> Outcome:
         return InsufficientInput(missing=missing)
 
     proposed = float(proposed)
-    city = rules_data.load(rules_data.DEMO_CITY)
+    city = data.load(data.DEMO_CITY)
     local_rule = city["setbacks"][setback]
     local_required = float(local_rule["min_ft"])
     local_auth = _authority(local_rule["authority"])
@@ -60,7 +60,7 @@ def check_setbacks(inputs: dict[str, Any]) -> Outcome:
     # State preemption: a state cap on the max a locality may require.
     required = local_required
     preemption: PreemptionRef | None = None
-    state = rules_data.load(rules_data.STATE_RULES)
+    state = data.load(data.STATE_RULES)
     cap_rule = state.get("preemptions", {}).get(setback)
     if cap_rule is not None:
         cap = float(cap_rule["max_local_required_ft"])
