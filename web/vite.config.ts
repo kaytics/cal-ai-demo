@@ -1,5 +1,6 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 // The generated Zod contract lives in the repo-root shared/ boundary (#11),
@@ -22,5 +23,11 @@ export default defineConfig({
     proxy: {
       "/agui": { target: SHELL, changeOrigin: true },
     },
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/setupTests.ts"],
+    css: false,
   },
 });

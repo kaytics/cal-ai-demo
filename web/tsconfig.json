@@ -20,7 +20,8 @@
     "paths": {
       "@contract": ["../shared/tool-result.ts"],
       "zod": ["./node_modules/zod"]
-    }
+    },
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src", "vite.config.ts", "../shared/tool-result.ts"]
 }
