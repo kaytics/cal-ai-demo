@@ -17,9 +17,14 @@ iterate the rules engine first — deferred, not reversed:
 
 - **Present (runnable spine):** `contract`, `rules_core`, `rules_data`, `mcp_server`, `agui`,
   `agent`, `shell` + golden tests. The rules vertical slice runs end-to-end over real MCP.
-- **Deferred:** `web/` (frontend chunk), the generated `contract/` boundary + its exporter (returns
+- **Deferred:** `web/` (frontend chunk), the generated `shared/` boundary + its exporter (returns
   with `web/`), and `corpus_ingest` / `corpus_query` (chunk C). Rebuild from this ADR when their
   chunks start.
+
+> **Amendment (2026-08-26):** the top-level generated boundary is named **`shared/`**, not
+> `contract/`. This disambiguates it from the Python source package (`backend/src/utils/contract`,
+> per ADR-0003): `shared/` holds cross-language build outputs (JSON Schema + generated Zod) consumed
+> by `web/`; `utils.contract` is the Pydantic source of truth it is generated from.
 
 ## Context
 
@@ -34,7 +39,7 @@ concretely enough that `/to-spec` can scaffold it.
 ```
 backend/    one uv project (Python + FastMCP)
 web/        npm (Vite/React SPA)
-contract/   GENERATED boundary: JSON Schema (from Pydantic) + generated Zod, consumed by web/
+shared/     GENERATED boundary: JSON Schema (from Pydantic) + generated Zod, consumed by web/
 fixtures/   site-facts + golden cases
 docs/       CONTEXT.md, adr/, wayfinder/, agents/
 ```
@@ -100,7 +105,7 @@ acquires a DB dependency; separate health checks; no shared pool") within one pr
 - The MCP boundary is demonstrable (curl-able HTTP server), matching the demo's "AI + MCP" point.
 - Cost: two long-running services to orchestrate in one container; two-sided contract validation;
   import-linter rules to keep rules-core pure now that it shares a process with the DB-backed corpus.
-- `contract/` (top-level) is a build output: Pydantic → JSON Schema → generated Zod for `web/`.
+- `shared/` (top-level) is a build output: Pydantic → JSON Schema → generated Zod for `web/`.
 
 ## Open / deferred (to the scaffolding session)
 
