@@ -7,31 +7,15 @@
 // error, never rendered as a verdict.
 
 import type { CSSProperties } from "react";
-import type { z } from "zod";
-import { ToolResult } from "@contract";
-
-type Result = z.infer<typeof ToolResult>;
-type Computed = Extract<Result, { verdict: "pass" | "fail" }>;
-type Abstain = Extract<Result, { verdict: "insufficient_input" }>;
-
-function isComputed(r: Result): r is Computed {
-  return r.verdict === "pass" || r.verdict === "fail";
-}
+import { parseToolResult, isComputed, type Abstain, type Computed } from "./toolResult";
 
 export function VerdictCard({ content }: { content: string }) {
-  let raw: unknown;
-  try {
-    raw = JSON.parse(content);
-  } catch {
-    return <ErrorCard message="tool result was not valid JSON" />;
-  }
+  // One fail-closed parse site, shared with the widget and the inspector: a
+  // payload that fails the strict contract is an error, never a verdict.
+  const parsed = parseToolResult(content);
+  if (!parsed.ok) return <ErrorCard message={parsed.error} />;
 
-  const parsed = ToolResult.safeParse(raw);
-  if (!parsed.success) {
-    return <ErrorCard message={`contract validation failed: ${parsed.error.issues[0]?.message ?? "invalid payload"}`} />;
-  }
-
-  const result = parsed.data;
+  const result = parsed.result;
   if (result.verdict === "insufficient_input") return <AbstainCard result={result} />;
   if (isComputed(result)) return <ComputedCard result={result} />;
 
