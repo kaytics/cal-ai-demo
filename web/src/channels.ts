@@ -2,19 +2,31 @@
 // render WIRING rather than by convention:
 //
 //   • prose items accumulate ONLY from TEXT_MESSAGE_CONTENT.delta
-//   • verdict items carry ONLY TOOL_CALL_RESULT.content
+//   • a tool item's verdict `content` carries ONLY TOOL_CALL_RESULT.content
 //
 // A number therefore has no path into prose: the reducer never writes a
-// tool-call payload into a prose item, and the two item kinds have disjoint
-// shapes. The UI maps each timeline item to a component that accepts only that
-// kind (Prose ← text, VerdictCard ← content), so the split is structural.
+// tool-call payload into a prose item, and the item kinds have disjoint shapes.
+// The UI maps each timeline item to a component that accepts only that kind
+// (Prose ← text, ToolCallWidget ← the tool item), so the split is structural.
+//
+// The tool item ALSO carries the request `argsJson` (from TOOL_CALL_ARGS). Those
+// are inputs the caller supplied, not a computed verdict — the invariant is that
+// a *computed* number is never fabricated in prose, and args live on the tool
+// item next to the verdict, never in a prose segment.
 
 import { EventType } from "@ag-ui/core";
 import type { AguiEvent } from "./agui";
 
 export type ProseItem = { kind: "prose"; messageId: string; text: string };
-export type VerdictItem = { kind: "verdict"; content: string };
-export type TimelineItem = ProseItem | VerdictItem;
+export type ToolCallItem = {
+  kind: "tool";
+  toolCallId: string;
+  toolName: string;
+  argsJson: string;
+  // The validated TOOL_CALL_RESULT.content, or null until the result arrives.
+  content: string | null;
+};
+export type TimelineItem = ProseItem | ToolCallItem;
 
 export type ChannelState = { timeline: TimelineItem[] };
 
@@ -22,6 +34,23 @@ export const emptyChannels: ChannelState = { timeline: [] };
 
 function str(value: unknown): string {
   return typeof value === "string" ? value : "";
+}
+
+// Immutably map the tool item matching `toolCallId`, leaving the rest untouched.
+function updateTool(
+  state: ChannelState,
+  toolCallId: string,
+  fn: (item: ToolCallItem) => ToolCallItem,
+): ChannelState {
+  let found = false;
+  const timeline = state.timeline.map((item) => {
+    if (item.kind === "tool" && item.toolCallId === toolCallId) {
+      found = true;
+      return fn(item);
+    }
+    return item;
+  });
+  return found ? { timeline } : state;
 }
 
 export function reduceChannel(state: ChannelState, event: AguiEvent): ChannelState {
@@ -50,10 +79,48 @@ export function reduceChannel(state: ChannelState, event: AguiEvent): ChannelSta
       // Segment already materialized from its deltas; nothing to add.
       return state;
 
+    case EventType.TOOL_CALL_START: {
+      // Open a tool-call widget on the sequence rail; args/verdict fill in later.
+      const item: ToolCallItem = {
+        kind: "tool",
+        toolCallId: str(event.toolCallId),
+        toolName: str(event.toolCallName),
+        argsJson: "",
+        content: null,
+      };
+      return { timeline: [...state.timeline, item] };
+    }
+
+    case EventType.TOOL_CALL_ARGS: {
+      if (typeof event.delta !== "string") return state;
+      // Accumulate the request args onto the matching tool item.
+      return updateTool(state, str(event.toolCallId), (item) => ({
+        ...item,
+        argsJson: item.argsJson + event.delta,
+      }));
+    }
+
+    case EventType.TOOL_CALL_END:
+      // Args stream closed; the verdict arrives on TOOL_CALL_RESULT. No-op.
+      return state;
+
     case EventType.TOOL_CALL_RESULT: {
       if (typeof event.content !== "string") return state;
-      // The verdict channel — a raw contract string, kept out of every prose item.
-      return { timeline: [...state.timeline, { kind: "verdict", content: event.content }] };
+      const toolCallId = str(event.toolCallId);
+      // The verdict channel — a raw contract string, attached to its tool item
+      // and kept out of every prose item.
+      const attached = updateTool(state, toolCallId, (item) => ({
+        ...item,
+        content: event.content as string,
+      }));
+      if (attached !== state) return attached;
+      // Defensive: a result with no preceding START still renders as a widget.
+      return {
+        timeline: [
+          ...state.timeline,
+          { kind: "tool", toolCallId, toolName: "", argsJson: "", content: event.content },
+        ],
+      };
     }
 
     default:
