@@ -55,6 +55,36 @@ describe("VerdictCard — COMPUTED", () => {
   });
 });
 
+// The real wire payload for the golden ABSTAIN case (front setback with no
+// proposed distance): the honest refusal names the exact missing field.
+const ABSTAIN = JSON.stringify({
+  tool: "rules_check_setbacks",
+  version: { image: "dev", ruleset: "demo-city-2026.08" },
+  timestamp: "2026-08-27T08:23:52.711666+00:00",
+  verdict: "insufficient_input",
+  responseMode: "ABSTAIN",
+  missing: ["proposed_ft"],
+});
+
+describe("VerdictCard — ABSTAIN (must-survive Q2)", () => {
+  it("renders the ABSTAIN badge and names the exact missing field", () => {
+    render(<VerdictCard content={ABSTAIN} />);
+
+    expect(screen.getByText("ABSTAIN")).toBeInTheDocument();
+    expect(screen.getByText("proposed_ft")).toBeInTheDocument();
+  });
+
+  it("fabricates no verdict or number for the abstaining case", () => {
+    render(<VerdictCard content={ABSTAIN} />);
+
+    expect(screen.queryByText("PASS")).not.toBeInTheDocument();
+    expect(screen.queryByText("FAIL")).not.toBeInTheDocument();
+    expect(screen.queryByText("COMPUTED")).not.toBeInTheDocument();
+    // No proposed/required/margin metrics rendered.
+    expect(screen.queryByText(/ ft$/)).not.toBeInTheDocument();
+  });
+});
+
 describe("VerdictCard — fail-closed", () => {
   it("shows an error, not a verdict, when the content is not valid JSON", () => {
     render(<VerdictCard content="not json" />);

@@ -23,11 +23,17 @@ def check_setbacks(
         str, Field(description="Which setback: 'front', 'side', or 'rear'.")
     ],
     proposed_ft: Annotated[
-        float, Field(description="Proposed setback distance in feet.")
-    ],
+        float | None,
+        Field(description="Proposed setback distance in feet. Omit to receive an ABSTAIN naming it as the missing input."),
+    ] = None,
 ) -> str:
     """Check a proposed setback against the controlling minimum (local +
-    state preemption). Returns the tool-result contract as a JSON string."""
+    state preemption). Returns the tool-result contract as a JSON string.
+
+    `proposed_ft` is optional at the boundary so the honest-refusal path is
+    reachable over the wire: omitting it yields an ABSTAIN result naming the
+    missing field, rather than a transport-level validation error (ADR-0001 —
+    ABSTAIN is a first-class result)."""
     outcome = core.check_setbacks(
         {"setback": setback, "proposed_ft": proposed_ft}
     )

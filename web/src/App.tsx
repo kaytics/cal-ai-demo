@@ -6,13 +6,23 @@ import { VerdictCard } from "./VerdictCard";
 import { Prose } from "./Prose";
 import { emptyChannels, reduceChannel, type ChannelState } from "./channels";
 
-// One hardcoded query (#12 proves the live pipe). A side setback of 4ft trips
-// the state-preemption COMPUTED path in the golden slice.
-const QUERY = {
-  tool_name: "rules_check_setbacks",
-  arguments: { setback: "side", proposed_ft: 4 },
-  intro: "Checking the applicable setback rule…",
-};
+// Hardcoded demo queries (the live pipe, not NL planning). `computed` trips the
+// state-preemption COMPUTED path (side/4); `abstain` omits proposed_ft, so the
+// backend returns the honest ABSTAIN naming the missing field (must-survive Q2).
+const QUERIES = {
+  computed: {
+    tool_name: "rules_check_setbacks",
+    arguments: { setback: "side", proposed_ft: 4 },
+    intro: "Checking the applicable setback rule…",
+  },
+  abstain: {
+    tool_name: "rules_check_setbacks",
+    arguments: { setback: "front" },
+    intro: "Checking the front setback…",
+  },
+} as const;
+
+type QueryKey = keyof typeof QUERIES;
 
 type Row = { seq: number; type: string; event: AguiEvent };
 
@@ -22,14 +32,14 @@ export default function App() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function run() {
+  async function run(key: QueryKey) {
     setRows([]);
     setChannels(emptyChannels);
     setError(null);
     setRunning(true);
     try {
       let seq = 0;
-      for await (const event of streamAgui(QUERY)) {
+      for await (const event of streamAgui(QUERIES[key])) {
         setRows((prev) => [...prev, { seq: seq++, type: event.type, event }]);
         // Route EVERY event through the single channel reducer — the split
         // (prose vs verdict) is decided there, not by ad-hoc checks here.
@@ -46,13 +56,18 @@ export default function App() {
     <main style={{ fontFamily: "system-ui, sans-serif", maxWidth: 820, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>Permit Copilot — channel split</h1>
       <p style={{ color: "#555" }}>
-        POSTs <code>{QUERY.tool_name}</code> to the live Python shell. Narration prose and the
+        POSTs <code>rules_check_setbacks</code> to the live Python shell. Narration prose and the
         structured verdict card are rendered from <strong>separate channels</strong> — a number can
         only reach the card, never the prose.
       </p>
-      <button onClick={run} disabled={running} style={{ padding: "0.5rem 1rem", fontSize: 16 }}>
-        {running ? "Streaming…" : "Run query"}
-      </button>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => run("computed")} disabled={running} style={{ padding: "0.5rem 1rem", fontSize: 16 }}>
+          {running ? "Streaming…" : "Computed (side / 4 ft)"}
+        </button>
+        <button onClick={() => run("abstain")} disabled={running} style={{ padding: "0.5rem 1rem", fontSize: 16 }}>
+          Abstain (front, no distance)
+        </button>
+      </div>
       {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
 
       {/* The composed assistant turn: prose and verdict interleaved in stream

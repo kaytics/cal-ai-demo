@@ -12,6 +12,7 @@ import { ToolResult } from "@contract";
 
 type Result = z.infer<typeof ToolResult>;
 type Computed = Extract<Result, { verdict: "pass" | "fail" }>;
+type Abstain = Extract<Result, { verdict: "insufficient_input" }>;
 
 function isComputed(r: Result): r is Computed {
   return r.verdict === "pass" || r.verdict === "fail";
@@ -31,18 +32,43 @@ export function VerdictCard({ content }: { content: string }) {
   }
 
   const result = parsed.data;
-  if (!isComputed(result)) {
-    // Other variants (ABSTAIN #15, SOURCED) get their own cards; out of scope for #13.
-    return (
-      <div style={cardStyle}>
-        <em style={{ color: "#666" }}>
-          {result.responseMode} result — rendered by a later card ({result.verdict}).
-        </em>
-      </div>
-    );
-  }
+  if (result.verdict === "insufficient_input") return <AbstainCard result={result} />;
+  if (isComputed(result)) return <ComputedCard result={result} />;
 
-  return <ComputedCard result={result} />;
+  // SOURCED (corpus.*) gets its own card in a later chunk.
+  return (
+    <div style={cardStyle}>
+      <em style={{ color: "#666" }}>{result.responseMode} result — rendered by a later card.</em>
+    </div>
+  );
+}
+
+function AbstainCard({ result }: { result: Abstain }) {
+  // The honest refusal (must-survive Q2): no number is produced — the card
+  // names exactly which fields the tool needed. `missing` is guaranteed
+  // non-empty by the contract (.min(1)).
+  return (
+    <div style={cardStyle}>
+      <header style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <span style={abstainBadgeStyle}>{result.responseMode}</span>
+        <span style={{ fontWeight: 700, fontSize: 16, color: "#556072" }}>Insufficient input</span>
+      </header>
+      <p style={{ margin: "0 0 10px", color: "#556072", fontSize: 14 }}>
+        No verdict is produced. The tool needs the following before it can compute one:
+      </p>
+      <ul style={missingListStyle}>
+        {result.missing.map((field) => (
+          <li key={field} style={missingRowStyle}>
+            <span style={needsTagStyle}>needs</span>
+            <code>{field}</code>
+          </li>
+        ))}
+      </ul>
+      <footer style={{ marginTop: 12, fontSize: 13, color: "#666" }}>
+        <div>Ruleset: {result.version.ruleset ?? "—"}</div>
+      </footer>
+    </div>
+  );
 }
 
 function ComputedCard({ result }: { result: Computed }) {
@@ -120,15 +146,54 @@ const cardStyle: CSSProperties = {
   boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
 };
 
-const badgeStyle: CSSProperties = {
+// Shared badge geometry; each variant overrides only its colors.
+const badgeBase: CSSProperties = {
   fontSize: 12,
   fontWeight: 700,
   letterSpacing: 0.5,
+  borderRadius: 999,
+  padding: "2px 10px",
+};
+
+const badgeStyle: CSSProperties = {
+  ...badgeBase,
   color: "#0a58ca",
   background: "#e7f0ff",
   border: "1px solid #b6d0ff",
-  borderRadius: 999,
-  padding: "2px 10px",
+};
+
+const abstainBadgeStyle: CSSProperties = {
+  ...badgeBase,
+  color: "#64708a",
+  background: "#eaedf3",
+  border: "1px solid #d3d9e4",
+};
+
+const missingListStyle: CSSProperties = {
+  listStyle: "none",
+  margin: 0,
+  padding: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+};
+
+const missingRowStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  fontFamily: "ui-monospace, monospace",
+  fontSize: 13,
+};
+
+const needsTagStyle: CSSProperties = {
+  fontSize: 9,
+  letterSpacing: 0.5,
+  textTransform: "uppercase",
+  color: "#64708a",
+  border: "1px solid #64708a",
+  borderRadius: 4,
+  padding: "1px 5px",
 };
 
 const numbersStyle: CSSProperties = {
