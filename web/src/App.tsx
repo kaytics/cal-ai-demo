@@ -6,45 +6,37 @@ import { ToolCallWidget } from "./ToolCallWidget";
 import { Inspector } from "./Inspector";
 import { emptyChannels, reduceChannel, type ChannelState, type ToolCallItem } from "./channels";
 
-// Hardcoded demo queries (the live pipe, not NL planning). Each is one chat
-// turn: a user question bubble followed by the assistant turn it triggers.
-// `computed` trips the state-preemption COMPUTED path (side/4); `abstain` omits
-// proposed_ft, so the backend returns the honest ABSTAIN (must-survive Q2).
-const QUERIES = {
-  computed: {
-    question: "Is a 4 ft side setback OK on this lot?",
-    tool_name: "rules_check_setbacks",
-    arguments: { setback: "side", proposed_ft: 4 },
-    intro: "Checking the applicable setback rule…",
-  },
-  abstain: {
-    question: "And is the front setback compliant?",
-    tool_name: "rules_check_setbacks",
-    arguments: { setback: "front" },
-    intro: "Checking the front setback…",
-  },
-} as const;
-
-type QueryKey = keyof typeof QUERIES;
+// Example prompts that prefill the Ask box — the backend plans the tool call
+// from the natural-language message. The first trips the state-preemption
+// COMPUTED path (side/4); the second omits a distance, so the planner passes
+// args through and the tool returns the honest ABSTAIN (must-survive Q2).
+const EXAMPLES = [
+  "Is a 4 ft side setback OK on this lot?",
+  "Is the front setback compliant?",
+] as const;
 
 type Turn = { id: number; question: string; channels: ChannelState; running: boolean };
 
 export default function App() {
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [draft, setDraft] = useState("");
   const [inspecting, setInspecting] = useState<ToolCallItem | null>(null);
   const [error, setError] = useState<string | null>(null);
   const nextId = useRef(0);
 
   const running = turns.some((t) => t.running);
 
-  async function run(key: QueryKey) {
+  async function run(message: string) {
+    const question = message.trim();
+    if (!question || running) return;
     const id = nextId.current++;
     setError(null);
-    setTurns((prev) => [...prev, { id, question: QUERIES[key].question, channels: emptyChannels, running: true }]);
+    setDraft("");
+    setTurns((prev) => [...prev, { id, question, channels: emptyChannels, running: true }]);
     const patch = (fn: (t: Turn) => Turn) =>
       setTurns((prev) => prev.map((t) => (t.id === id ? fn(t) : t)));
     try {
-      for await (const event of streamAgui(QUERIES[key])) {
+      for await (const event of streamAgui({ message: question })) {
         // Route EVERY event through the single channel reducer — the split
         // (prose vs tool/verdict) is decided there, not by ad-hoc checks here.
         patch((t) => ({ ...t, channels: reduceChannel(t.channels, event) }));
@@ -79,13 +71,33 @@ export default function App() {
       </main>
 
       <footer style={askwrapStyle}>
-        <div style={askbarStyle}>
-          <button onClick={() => run("computed")} disabled={running} style={sendStyle}>
-            {running ? "Streaming…" : "Ask: side / 4 ft"}
-          </button>
-          <button onClick={() => run("abstain")} disabled={running} style={sendGhostStyle}>
-            Ask: front (no distance)
-          </button>
+        <div style={askcolStyle}>
+          <div style={chipsStyle}>
+            {EXAMPLES.map((ex) => (
+              <button key={ex} onClick={() => setDraft(ex)} disabled={running} style={chipStyle}>
+                {ex}
+              </button>
+            ))}
+          </div>
+          <form
+            style={askbarStyle}
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(draft);
+            }}
+          >
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              disabled={running}
+              placeholder="Ask a setback question…"
+              aria-label="Ask a setback question"
+              style={inputStyle}
+            />
+            <button type="submit" disabled={running || draft.trim() === ""} style={sendStyle}>
+              {running ? "Streaming…" : "Send"}
+            </button>
+          </form>
         </div>
       </footer>
 
@@ -229,17 +241,49 @@ const askwrapStyle: CSSProperties = {
   background: "linear-gradient(transparent, #eaeef4 34%)",
 };
 
+const askcolStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+  width: "100%",
+  maxWidth: 760,
+};
+
+const chipsStyle: CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap" };
+
+const chipStyle: CSSProperties = {
+  font: "inherit",
+  fontWeight: 500,
+  fontSize: 12.5,
+  color: "#31415f",
+  background: "#f4f7fb",
+  border: "1px solid #c2cad9",
+  borderRadius: 999,
+  padding: "5px 12px",
+  cursor: "pointer",
+};
+
 const askbarStyle: CSSProperties = {
   display: "flex",
   gap: 10,
   alignItems: "center",
   width: "100%",
-  maxWidth: 760,
   padding: "12px 16px",
   border: "1px solid #c2cad9",
   borderRadius: 11,
   background: "#fff",
   boxShadow: "0 1px 2px rgba(16,22,35,.06)",
+};
+
+const inputStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  font: "inherit",
+  fontSize: 14.5,
+  color: "#101623",
+  border: 0,
+  outline: "none",
+  background: "transparent",
 };
 
 const sendStyle: CSSProperties = {
@@ -249,18 +293,6 @@ const sendStyle: CSSProperties = {
   color: "#fff",
   background: "#2f4fd6",
   border: 0,
-  borderRadius: 8,
-  padding: "7px 14px",
-  cursor: "pointer",
-};
-
-const sendGhostStyle: CSSProperties = {
-  font: "inherit",
-  fontWeight: 560,
-  fontSize: 13,
-  color: "#101623",
-  background: "#f4f7fb",
-  border: "1px solid #c2cad9",
   borderRadius: 8,
   padding: "7px 14px",
   cursor: "pointer",

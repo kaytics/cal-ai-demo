@@ -1,23 +1,22 @@
-// Minimal AG-UI SSE consumer for #12: POST the deterministic form-mode request
-// and yield each parsed event. The wire is `data:`-only frames (data: {json}\n\n,
+// Minimal AG-UI SSE consumer for #22: POST a natural-language Ask request and
+// yield each parsed event. The wire is `data:`-only frames (data: {json}\n\n,
 // no `event:` line) emitted by the Python EventEncoder (ADR-0001; research #2).
 //
 // NOTE: this hand-rolls the SSE read because the shell speaks the custom
-// {tool_name, arguments} body, not @ag-ui/client's RunAgentInput. Adopting
-// @ag-ui/client's HttpAgent (decision #3) needs the shell to speak RunAgentInput
-// (or a thin adapter) — deferred to the real agent-loop work.
+// {message} body, not @ag-ui/client's RunAgentInput. Adopting @ag-ui/client's
+// HttpAgent (decision #3) needs the shell to speak RunAgentInput (or a thin
+// adapter) — deferred to the real agent-loop work.
 
-export type ToolRequest = {
-  tool_name: string;
-  arguments: Record<string, unknown>;
-  intro?: string;
+// The NL Ask request: the backend /agui/run endpoint plans the tool call itself.
+export type AskRequest = {
+  message: string;
 };
 
 // AG-UI events carry a `type` (an EventType value) plus event-specific fields.
 export type AguiEvent = { type: string } & Record<string, unknown>;
 
 export async function* streamAgui(
-  req: ToolRequest,
+  req: AskRequest,
   signal?: AbortSignal,
 ): AsyncGenerator<AguiEvent> {
   const res = await fetch("/agui/run", {

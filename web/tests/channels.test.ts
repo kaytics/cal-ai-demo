@@ -111,3 +111,45 @@ describe("reduceChannel — channel-split invariant", () => {
     expect(state.timeline).toEqual([{ kind: "prose", messageId: "m1", text: "" }]);
   });
 });
+
+// The NL Ask turn shapes the backend emits (#18–#21; canonical frame sequences
+// in backend/tests/test_agui_endpoint.py). The narrator outro is a SECOND text
+// message after the tool result; a prose-only turn carries no tool lifecycle.
+describe("reduceChannel — NL turn shapes", () => {
+  it("appends the narrator outro as a second prose bubble, keeping the intro", () => {
+    const state = run([
+      textStart("intro"),
+      textDelta("intro", "Checking the front setback…"),
+      textEnd("intro"),
+      toolStart("t1", "rules_check_setbacks"),
+      toolArgs("t1", '{"setback":"front","proposed_ft":25}'),
+      toolEnd("t1"),
+      toolResult("t1", VERDICT),
+      // A NEW message id after the tool result — the streamed outro.
+      textStart("outro"),
+      textDelta("outro", "The proposed setback "),
+      textDelta("outro", "clears the minimum."),
+      textEnd("outro"),
+    ]);
+
+    expect(state.timeline.map((i) => i.kind)).toEqual(["prose", "tool", "prose"]);
+    const prose = state.timeline.filter((i) => i.kind === "prose") as { messageId: string; text: string }[];
+    // Two DISTINCT prose bubbles — the outro is appended, not merged into the intro.
+    expect(prose.map((p) => p.messageId)).toEqual(["intro", "outro"]);
+    expect(prose[0].text).toBe("Checking the front setback…");
+    expect(prose[1].text).toBe("The proposed setback clears the minimum.");
+  });
+
+  it("renders a prose-only turn (decline/apology) as a single bubble with no card", () => {
+    const state = run([
+      textStart("m1"),
+      textDelta("m1", "I can only help with permitting rules like setbacks."),
+      textEnd("m1"),
+    ]);
+
+    expect(state.timeline).toEqual([
+      { kind: "prose", messageId: "m1", text: "I can only help with permitting rules like setbacks." },
+    ]);
+    expect(state.timeline.some((i) => i.kind === "tool")).toBe(false);
+  });
+});
