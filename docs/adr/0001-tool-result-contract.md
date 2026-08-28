@@ -78,6 +78,26 @@ chunk 04 without changing the envelope.
   add their members independently.
 - Cost: a shared schema package both server and client depend on (fits the monorepo shape, chunk 00).
 
+## Amendment (2026-08-27) — the invariant is about computation, not digits in prose
+
+- **Deciders:** AI-provider / NL-planning work, branch `bemnet/feature/ai-provider-setup`.
+
+The original wording ("the channel split … prose only on `TEXT_MESSAGE_*`", read as *no number
+ever appears in prose*) was an over-strong proxy for the property we actually care about. It breaks
+the agent's ability to **narrate a result and answer follow-ups** ("why is the requirement 0 — what
+convention applied?"), which necessarily voices numbers.
+
+The invariant is restated as the **computation invariant** (see CONTEXT.md): the model never
+*performs computation*. All arithmetic lives in the pure MCP tool; `verdict` / `responseMode` /
+`trace` remain strictly server-set — that part is **unchanged and still structural**. What relaxes
+is only the *prose text*: the LLM narrator (and follow-up answering) reads the full tool result +
+`trace` as grounding and **may voice/explain** the tool's numbers. The number is still originated by
+the tool, never by the model.
+
+Enforcement of "narrate only from the result, never invent" is, for now, a **strict system prompt**
+— deliberately *not* a wiring-level digit guard, because a guard fights the follow-up-explanation
+use case. Revisit if the narrator is observed drifting from the tool result.
+
 ## Open / deferred
 
 - Exact per-namespace `verdict` enumerations for `rules.*`, `corpus.*`, `parcel.*` — their chunks.

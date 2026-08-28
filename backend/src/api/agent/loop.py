@@ -1,8 +1,8 @@
-"""The turn loop: plan -> call tool over MCP -> emit AG-UI stream.
+"""The turn loop: drive a ToolPlan -> call tool over MCP -> emit AG-UI stream.
 
-NL planning (Bedrock) is a TODO; the deterministic path below exercises the
-real MCP hop + the channel-split emitter end-to-end, which is what the scaffold
-needs to prove. A `ToolPlan` is what the Bedrock planner will eventually produce.
+`run_turn` is planner-agnostic: it takes a `ToolPlan` and drives the real MCP
+hop + the channel-split emitter. The plan is produced by `api.agent.planner`
+(NL tool-use over OpenRouter, issue #18).
 """
 
 from __future__ import annotations
@@ -17,20 +17,11 @@ from api.agui import ChannelEmitter
 
 @dataclass(frozen=True)
 class ToolPlan:
-    """What to call. Eventually produced by the Bedrock planner from NL input."""
+    """What to call. Produced by the planner (api.agent.planner) from NL input."""
 
     tool_name: str
     arguments: dict[str, object]
     intro: str = "Checking the applicable rule…"
-
-
-def plan_turn(user_input: str) -> ToolPlan:
-    """TODO(chunk 02): replace with a Bedrock tool-use planner over `user_input`.
-
-    For now, the shell passes a structured request (deterministic form mode),
-    so planning is a passthrough handled by the caller. This stub documents the
-    seam."""
-    raise NotImplementedError("Bedrock NL planning lands in a scenario chunk")
 
 
 async def run_turn(

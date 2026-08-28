@@ -11,10 +11,11 @@ dependencies = [
     "uvicorn>=0.30",
     "starlette>=0.37",
     "fastmcp>=3.4.7",
+    "openrouter>=1.1.97",
 ]
 
 [project.optional-dependencies]
-agent = ["boto3>=1.34"]
+agent = []
 
 [dependency-groups]
 dev = [

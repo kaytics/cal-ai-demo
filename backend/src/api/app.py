@@ -1,4 +1,10 @@
-"""Starlette ASGI app: the AG-UI SSE endpoint."""
+"""Starlette ASGI app: the AG-UI SSE endpoint.
+
+`/agui/run` is the natural-language ("Ask") entry: an NL `message` is planned
+into a tool call (agent.planner.plan_turn) and driven through the MCP hop +
+channel-split emitter. The structured land-permit "Form" is a separate app
+(Scenario A), not a mode here — so there is no `mode` field.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +16,9 @@ from starlette.responses import JSONResponse, StreamingResponse
 from starlette.routing import Route
 
 from api.agent import McpToolClient
-from api.agent.loop import ToolPlan, run_turn
+from api.agent import provider as _provider
+from api.agent.loop import run_turn
+from api.agent.planner import ChatLLM, plan_turn
 from api.agui import ChannelEmitter
 
 
@@ -18,32 +26,36 @@ async def health(_: Request) -> JSONResponse:
     return JSONResponse({"status": "ok"})
 
 
-async def agui_run(request: Request) -> StreamingResponse:
-    """POST {tool_name, arguments, intro?} -> AG-UI SSE stream.
+def build_app(
+    *,
+    llm: ChatLLM,
+    model: str,
+    mcp: McpToolClient,
+) -> Starlette:
+    """Wire the app. Dependencies are injectable for tests (fake LLM, in-memory
+    MCP); production resolves them lazily on first request so importing this
+    module needs no API key."""
 
-    Deterministic form mode: the request names the tool + args directly. The
-    Bedrock NL planner (agent.loop.plan_turn) will later produce the ToolPlan
-    from free text instead."""
-    body = await request.json()
-    plan = ToolPlan(
-        tool_name=body["tool_name"],
-        arguments=body.get("arguments", {}),
-        intro=body.get("intro", "Checking the applicable rule…"),
-    )
-    emitter = ChannelEmitter()
-    stream = run_turn(
-        plan,
-        thread_id=body.get("thread_id", str(uuid.uuid4())),
-        run_id=str(uuid.uuid4()),
-        message_id=str(uuid.uuid4()),
-        tool_call_id=str(uuid.uuid4()),
-        client=McpToolClient(),
-        emitter=emitter,
-    )
-    return StreamingResponse(stream, media_type=emitter.content_type)
+    async def agui_run(request: Request) -> JSONResponse | StreamingResponse:
+        body = await request.json()
+        message = body.get("message")
+        if not isinstance(message, str) or not message.strip():
+            return JSONResponse({"error": "message is required"}, status_code=400)
 
+        plan = await plan_turn(message, mcp=mcp, llm=llm, model=model)
 
-def build_app() -> Starlette:
+        emitter = ChannelEmitter()
+        stream = run_turn(
+            plan,
+            thread_id=body.get("thread_id", str(uuid.uuid4())),
+            run_id=str(uuid.uuid4()),
+            message_id=str(uuid.uuid4()),
+            tool_call_id=str(uuid.uuid4()),
+            client=mcp,
+            emitter=emitter,
+        )
+        return StreamingResponse(stream, media_type=emitter.content_type)
+
     return Starlette(
         routes=[
             Route("/health", health),
@@ -52,4 +64,12 @@ def build_app() -> Starlette:
     )
 
 
-app = build_app()
+def app_factory() -> Starlette:
+    """Production wiring. Called by uvicorn at server startup (factory=True),
+    NOT at import — so `make_llm()` (which needs OPENROUTER_API_KEY) is only
+    reached when actually serving, and importing this module stays key-free."""
+    return build_app(
+        llm=_provider.make_llm(),
+        model=_provider.default_model(),
+        mcp=McpToolClient(),
+    )

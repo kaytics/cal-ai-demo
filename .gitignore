@@ -1,6 +1,11 @@
 # Agent worktrees / local tooling
 .claude/
 
+# Secrets / local env (never commit real keys; .env.example is tracked)
+.env
+.env.*
+!.env.example
+
 # Python
 __pycache__/
 *.py[cod]
