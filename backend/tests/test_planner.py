@@ -67,3 +67,16 @@ def test_plan_turn_maps_nl_to_a_tool_plan_and_offers_the_discovered_tool() -> No
     (fn,) = [t["function"] for t in tools if t["function"]["name"] == "rules_check_setbacks"]
     assert set(fn["parameters"]["properties"]) >= {"setback", "proposed_ft"}
     assert fn["parameters"]["required"] == ["setback"]
+
+
+def test_plan_turn_sends_an_anti_guess_system_prompt() -> None:
+    # The planner must instruct the model never to fabricate an argument value
+    # (issue #20) — an arg it can't extract is left unset so the tool ABSTAINs.
+    llm = FakeLLM(tool_name="rules_check_setbacks", arguments={"setback": "side"})
+    mcp = McpToolClient(build_server())
+
+    asyncio.run(plan_turn("Is my side setback ok?", mcp=mcp, llm=llm, model="m"))
+
+    messages = (llm.seen_kwargs or {})["messages"]
+    system = next(m["content"] for m in messages if m["role"] == "system").lower()
+    assert "guess" in system or "fabricate" in system or "invent" in system

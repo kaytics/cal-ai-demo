@@ -94,6 +94,23 @@ def test_ask_message_streams_the_verdict_card_frames() -> None:
     )
 
 
+def test_under_specified_message_abstains_naming_the_missing_field() -> None:
+    # The model (correctly) omits proposed_ft; the planner passes args through
+    # without inventing one, so the tool's ABSTAIN fires naming the field (#20).
+    llm = FakeLLM(
+        tool_name="rules_check_setbacks",
+        arguments={"setback": "side"},  # no proposed_ft
+        outro=["I can't answer yet — I need the proposed distance."],
+    )
+    resp = _client(llm).post("/agui/run", json={"message": "Is my side setback ok?"})
+
+    assert resp.status_code == 200
+    body = resp.text
+    assert "ABSTAIN" in body
+    assert "insufficient_input" in body
+    assert "proposed_ft" in body  # named in the ABSTAIN's `missing` list
+
+
 def test_missing_message_is_a_400() -> None:
     llm = FakeLLM(tool_name="rules_check_setbacks", arguments={})
     resp = _client(llm).post("/agui/run", json={})

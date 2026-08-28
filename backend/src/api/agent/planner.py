@@ -14,6 +14,15 @@ from typing import Protocol
 from api.agent.loop import ToolPlan
 from api.agent.mcp_client import McpToolClient
 
+_SYSTEM = (
+    "You select and call exactly one permitting tool for the user's question. "
+    "Fill ONLY the arguments you can extract directly from the message. If a "
+    "required value (such as a proposed distance) is not stated, LEAVE IT OUT — "
+    "never guess, default, fabricate, or invent a value to satisfy the schema. "
+    "Omitting an argument is correct: the tool will return an honest refusal "
+    "naming exactly what it needs."
+)
+
 
 class _Chat(Protocol):
     async def send_async(self, **kwargs: object) -> object: ...
@@ -60,7 +69,10 @@ async def plan_turn(
 
     response = await llm.chat.send_async(
         model=model,
-        messages=[{"role": "user", "content": message}],
+        messages=[
+            {"role": "system", "content": _SYSTEM},
+            {"role": "user", "content": message},
+        ],
         tools=tools,
         tool_choice="auto",
         stream=False,
