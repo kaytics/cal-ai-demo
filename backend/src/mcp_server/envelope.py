@@ -1,6 +1,6 @@
 """The adapter: domain outcome -> validated wire ToolResult.
 
-This is where timestamp/version/responseMode/tool are set (never in rules_core,
+This is where timestamp/version/responseMode/tool are set (never in the domain core,
 never by the model). Uses the clock and env — legal here, forbidden in the pure
 core.
 """
@@ -10,8 +10,11 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime
 
-import rules_data
-from contract import (
+from domains.rules import data
+from domains.rules.core import ComputedOutcome, InsufficientInput, Outcome
+from domains.rules.core.domain import AuthorityRef, PreemptionRef
+from domains.rules.core.domain import TraceStep as DomainTraceStep
+from utils.contract import (
     AbstainResult,
     Authority,
     ComputedResult,
@@ -21,9 +24,6 @@ from contract import (
     Version,
     parse_tool_result,
 )
-from rules_core import ComputedOutcome, InsufficientInput, Outcome
-from rules_core.domain import AuthorityRef, PreemptionRef
-from rules_core.domain import TraceStep as DomainTraceStep
 
 
 def _now_iso() -> str:
@@ -34,7 +34,7 @@ def current_version() -> Version:
     """Provenance stamped on every result (CONTEXT.md: Version)."""
     return Version(
         image=os.environ.get("IMAGE_TAG", "dev"),
-        ruleset=rules_data.load(rules_data.DEMO_CITY).get("version"),
+        ruleset=data.load(data.DEMO_CITY).get("version"),
         fixtures=os.environ.get("FIXTURES_VERSION"),
     )
 
@@ -95,4 +95,4 @@ def to_tool_result(tool: str, outcome: Outcome) -> ToolResult:
 def to_json(tool: str, outcome: Outcome) -> str:
     """The value carried on AG-UI TOOL_CALL_RESULT.content: a JSON string."""
     result = to_tool_result(tool, outcome)
-    return result.model_dump_json(by_alias=True)  # type: ignore[attr-defined]
+    return result.model_dump_json(by_alias=True, exclude_none=True)  # type: ignore[attr-defined]

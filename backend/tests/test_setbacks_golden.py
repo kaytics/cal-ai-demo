@@ -1,4 +1,4 @@
-"""Golden cases for the pure engine (rules_core.check_setbacks)."""
+"""Golden cases for the pure engine (domains.rules.core.check_setbacks)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from rules_core import ComputedOutcome, InsufficientInput, check_setbacks
+from domains.rules.core import ComputedOutcome, InsufficientInput, check_setbacks
 
 _GOLDEN = Path(__file__).parents[2] / "fixtures" / "golden" / "rules-setbacks.yaml"
 _CASES = yaml.safe_load(_GOLDEN.read_text(encoding="utf-8"))["cases"]
