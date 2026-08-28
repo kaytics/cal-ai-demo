@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from typing import Protocol
 
-from api.agent.loop import ToolPlan
+from api.agent.loop import DEFAULT_DECLINE, ToolPlan
 from api.agent.mcp_client import McpToolClient
 
 _SYSTEM = (
@@ -20,7 +20,8 @@ _SYSTEM = (
     "required value (such as a proposed distance) is not stated, LEAVE IT OUT — "
     "never guess, default, fabricate, or invent a value to satisfy the schema. "
     "Omitting an argument is correct: the tool will return an honest refusal "
-    "naming exactly what it needs."
+    "naming exactly what it needs. If no tool fits the question, do not call "
+    "one — briefly say you can only help with permitting rules."
 )
 
 
@@ -78,6 +79,13 @@ async def plan_turn(
         stream=False,
     )
 
-    call = response.choices[0].message.tool_calls[0]
+    message = response.choices[0].message
+    tool_calls = message.tool_calls
+    if not tool_calls:
+        # Out of scope: the model returned prose, not a tool call. Decline into
+        # a prose-only turn (issue #21) rather than force a call.
+        return ToolPlan(tool_name=None, decline=message.content or DEFAULT_DECLINE)
+
+    call = tool_calls[0]
     arguments = json.loads(call.function.arguments)
     return ToolPlan(tool_name=call.function.name, arguments=arguments)

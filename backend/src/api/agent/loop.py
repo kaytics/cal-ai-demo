@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from api.agent.mcp_client import McpToolClient
@@ -18,17 +18,23 @@ from api.agui import ChannelEmitter
 
 _log = logging.getLogger(__name__)
 
+# The default decline prose, shared with the planner (single source of truth).
+DEFAULT_DECLINE = "I can only help with permitting rules like setbacks right now."
+
 if TYPE_CHECKING:
     from api.agent.planner import ChatLLM
 
 
 @dataclass(frozen=True)
 class ToolPlan:
-    """What to call. Produced by the planner (api.agent.planner) from NL input."""
+    """What to call — or, when `tool_name is None`, a **decline**: the planner
+    chose no tool (out of scope) or failed, and `decline` carries the prose for
+    a prose-only turn (issue #21). Produced by the planner from NL input."""
 
-    tool_name: str
-    arguments: dict[str, object]
+    tool_name: str | None
+    arguments: dict[str, object] = field(default_factory=dict)
     intro: str = "Checking the applicable rule…"
+    decline: str | None = None
 
 
 @dataclass(frozen=True)
@@ -64,6 +70,18 @@ async def run_turn(
     emitter = emitter or ChannelEmitter()
 
     yield emitter.emit_run_started(thread_id=thread_id, run_id=run_id)
+
+    # Prose-only turn (issue #21): the planner chose no tool (out of scope) or
+    # failed. Emit the decline as prose — no tool-call frames, no card — and
+    # finish. One mechanism serves both the decline and the failure apology.
+    if plan.tool_name is None:
+        yield emitter.emit_prose_start(message_id=message_id)
+        yield emitter.emit_prose(
+            message_id=message_id, delta=plan.decline or DEFAULT_DECLINE
+        )
+        yield emitter.emit_prose_end(message_id=message_id)
+        yield emitter.emit_run_finished(thread_id=thread_id, run_id=run_id)
+        return
 
     # Prose channel: narration only, never a number/verdict.
     yield emitter.emit_prose_start(message_id=message_id)

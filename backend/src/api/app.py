@@ -8,6 +8,7 @@ channel-split emitter. The structured land-permit "Form" is a separate app
 
 from __future__ import annotations
 
+import logging
 import uuid
 
 from starlette.applications import Starlette
@@ -17,9 +18,12 @@ from starlette.routing import Route
 
 from api.agent import McpToolClient
 from api.agent import provider as _provider
-from api.agent.loop import Narrator, run_turn
+from api.agent.loop import Narrator, ToolPlan, run_turn
 from api.agent.planner import ChatLLM, plan_turn
 from api.agui import ChannelEmitter
+
+_log = logging.getLogger(__name__)
+_APOLOGY = "Sorry — I hit a problem handling that. Please try again."
 
 
 async def health(_: Request) -> JSONResponse:
@@ -43,7 +47,11 @@ def build_app(
         if not isinstance(message, str) or not message.strip():
             return JSONResponse({"error": "message is required"}, status_code=400)
 
-        plan = await plan_turn(message, mcp=mcp, llm=llm, model=model)
+        try:
+            plan = await plan_turn(message, mcp=mcp, llm=llm, model=model)
+        except Exception:  # noqa: BLE001 — degrade to a prose-only apology, never 500
+            _log.warning("planner failed; prose-only apology turn", exc_info=True)
+            plan = ToolPlan(tool_name=None, decline=_APOLOGY)
 
         emitter = ChannelEmitter()
         stream = run_turn(

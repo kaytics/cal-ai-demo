@@ -69,6 +69,31 @@ def test_plan_turn_maps_nl_to_a_tool_plan_and_offers_the_discovered_tool() -> No
     assert fn["parameters"]["required"] == ["setback"]
 
 
+class DecliningLLM:
+    """The model declines to call a tool: no tool_calls, a plain-text reply."""
+
+    def __init__(self, content: str) -> None:
+        self._content = content
+        self.chat = SimpleNamespace(send_async=self._send_async)
+
+    async def _send_async(self, **_: object) -> object:
+        message = SimpleNamespace(tool_calls=None, content=self._content)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+def test_plan_turn_declines_when_the_model_calls_no_tool() -> None:
+    # Out of scope: the model returns prose, not a tool call. The planner must
+    # yield a no-tool decline (#21) instead of crashing on tool_calls[0].
+    llm = DecliningLLM(content="I can only help with permitting rules like setbacks.")
+    mcp = McpToolClient(build_server())
+
+    plan = asyncio.run(plan_turn("What's the weather?", mcp=mcp, llm=llm, model="m"))
+
+    assert plan.tool_name is None
+    assert plan.decline is not None
+    assert "setbacks" in plan.decline
+
+
 def test_plan_turn_sends_an_anti_guess_system_prompt() -> None:
     # The planner must instruct the model never to fabricate an argument value
     # (issue #20) — an arg it can't extract is left unset so the tool ABSTAINs.

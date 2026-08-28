@@ -86,6 +86,21 @@ def test_outro_streams_after_the_verdict_card() -> None:
     assert "Clears " in body and "the minimum." in body
 
 
+def test_no_tool_plan_emits_prose_only_turn() -> None:
+    plan = ToolPlan(tool_name=None, decline="I can only help with setbacks.")
+
+    async def go() -> list[str]:
+        return [frame async for frame in run_turn(plan, narrator=None, **IDS)]
+
+    body = "".join(asyncio.run(go()))
+
+    assert body.index("RUN_STARTED") < body.index("I can only help with setbacks.")
+    assert "I can only help with setbacks." in body
+    assert "RUN_FINISHED" in body
+    # A prose-only turn: no tool-call lifecycle and no verdict card.
+    assert "TOOL_CALL" not in body
+
+
 def test_narrator_failure_drops_outro_but_finishes() -> None:
     frames = _drive(FailingLLM())
     body = "".join(frames)

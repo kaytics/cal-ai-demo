@@ -63,7 +63,29 @@ class FakeLLM:
         return SimpleNamespace(choices=[SimpleNamespace(message=message)])
 
 
-def _client(llm: FakeLLM) -> TestClient:
+class DecliningLLM:
+    """Out of scope: the model returns prose, not a tool call."""
+
+    def __init__(self, content: str) -> None:
+        self._content = content
+        self.chat = SimpleNamespace(send_async=self._send_async)
+
+    async def _send_async(self, **_: object) -> object:
+        message = SimpleNamespace(tool_calls=None, content=self._content)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+class RaisingLLM:
+    """The provider is down: planning raises."""
+
+    def __init__(self) -> None:
+        self.chat = SimpleNamespace(send_async=self._send_async)
+
+    async def _send_async(self, **_: object) -> object:
+        raise RuntimeError("provider down")
+
+
+def _client(llm: object) -> TestClient:
     app = build_app(
         llm=llm,
         model="test/model",
@@ -109,6 +131,30 @@ def test_under_specified_message_abstains_naming_the_missing_field() -> None:
     assert "ABSTAIN" in body
     assert "insufficient_input" in body
     assert "proposed_ft" in body  # named in the ABSTAIN's `missing` list
+
+
+def test_out_of_scope_message_is_a_prose_only_turn() -> None:
+    llm = DecliningLLM("I can only help with permitting rules like setbacks.")
+    resp = _client(llm).post("/agui/run", json={"message": "What's the weather?"})
+
+    assert resp.status_code == 200
+    body = resp.text
+    assert "RUN_STARTED" in body and "RUN_FINISHED" in body
+    assert "setbacks" in body
+    # No tool-call lifecycle, no card.
+    assert "TOOL_CALL" not in body
+
+
+def test_planner_failure_is_a_prose_only_apology_turn() -> None:
+    resp = _client(RaisingLLM()).post(
+        "/agui/run", json={"message": "Is a 4 ft side setback ok?"}
+    )
+
+    # No mid-stream 500; the stream opens and closes cleanly with prose only.
+    assert resp.status_code == 200
+    body = resp.text
+    assert "RUN_STARTED" in body and "RUN_FINISHED" in body
+    assert "TOOL_CALL" not in body
 
 
 def test_missing_message_is_a_400() -> None:
