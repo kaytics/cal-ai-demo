@@ -26,8 +26,12 @@ def narrator_model() -> str:
 
 
 def make_llm() -> object:
-    """The official OpenRouter client. Raises if the key is unset — only called
-    when an Ask request is actually served, never at import."""
+    """The official OpenRouter client, wrapped so provider 429s are retried with
+    backoff (see agent.retry). Raises if the key is unset — only called when an
+    Ask request is actually served, never at import."""
     from openrouter import OpenRouter
 
-    return OpenRouter(api_key=os.environ["OPENROUTER_API_KEY"])
+    from api.agent.retry import RetryingLLM
+
+    client = OpenRouter(api_key=os.environ["OPENROUTER_API_KEY"])
+    return RetryingLLM(client)
