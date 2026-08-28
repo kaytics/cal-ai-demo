@@ -8,24 +8,22 @@ tool and extracts arguments (the computation invariant; CONTEXT.md, ADR-0001).
 
 from __future__ import annotations
 
-import functools
 import json
 from typing import Protocol
-
-import anyio
 
 from api.agent.loop import ToolPlan
 from api.agent.mcp_client import McpToolClient
 
 
 class _Chat(Protocol):
-    def send(self, **kwargs: object) -> object: ...
+    async def send_async(self, **kwargs: object) -> object: ...
 
 
 class ChatLLM(Protocol):
-    """The slice of the OpenRouter client the planner needs: `chat.send(...)`.
-    The real implementation is the official (synchronous) `openrouter.OpenRouter`
-    client (see provider.py); the blocking call is offloaded to a thread."""
+    """The slice of the OpenRouter client the agent needs: `chat.send_async(...)`.
+    The real implementation is `openrouter.OpenRouter` (see provider.py), whose
+    async API lets the planner (non-streaming) and narrator (streaming) run
+    natively on the event loop."""
 
     chat: _Chat
 
@@ -60,15 +58,12 @@ async def plan_turn(
     """Turn NL `message` into a ToolPlan by letting the model pick an MCP tool."""
     tools = _to_openai_tools(await mcp.list_tools())
 
-    # The official OpenRouter SDK is synchronous; keep the event loop free.
-    response = await anyio.to_thread.run_sync(
-        functools.partial(
-            llm.chat.send,
-            model=model,
-            messages=[{"role": "user", "content": message}],
-            tools=tools,
-            tool_choice="auto",
-        )
+    response = await llm.chat.send_async(
+        model=model,
+        messages=[{"role": "user", "content": message}],
+        tools=tools,
+        tool_choice="auto",
+        stream=False,
     )
 
     call = response.choices[0].message.tool_calls[0]

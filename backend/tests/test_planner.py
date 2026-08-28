@@ -26,9 +26,9 @@ class FakeLLM:
         self._tool_name = tool_name
         self._arguments = arguments
         self.seen_kwargs: dict[str, object] | None = None
-        self.chat = SimpleNamespace(send=self._send)
+        self.chat = SimpleNamespace(send_async=self._send_async)
 
-    def _send(self, **kwargs: object) -> object:
+    async def _send_async(self, **kwargs: object) -> object:
         self.seen_kwargs = kwargs
         tool_call = SimpleNamespace(
             function=SimpleNamespace(

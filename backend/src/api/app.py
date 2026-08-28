@@ -17,7 +17,7 @@ from starlette.routing import Route
 
 from api.agent import McpToolClient
 from api.agent import provider as _provider
-from api.agent.loop import run_turn
+from api.agent.loop import Narrator, run_turn
 from api.agent.planner import ChatLLM, plan_turn
 from api.agui import ChannelEmitter
 
@@ -31,6 +31,7 @@ def build_app(
     llm: ChatLLM,
     model: str,
     mcp: McpToolClient,
+    narrator_model: str,
 ) -> Starlette:
     """Wire the app. Dependencies are injectable for tests (fake LLM, in-memory
     MCP); production resolves them lazily on first request so importing this
@@ -53,6 +54,11 @@ def build_app(
             tool_call_id=str(uuid.uuid4()),
             client=mcp,
             emitter=emitter,
+            narrator=Narrator(
+                llm=llm,
+                model=narrator_model,
+                outro_message_id=str(uuid.uuid4()),
+            ),
         )
         return StreamingResponse(stream, media_type=emitter.content_type)
 
@@ -72,4 +78,5 @@ def app_factory() -> Starlette:
         llm=_provider.make_llm(),
         model=_provider.default_model(),
         mcp=McpToolClient(),
+        narrator_model=_provider.narrator_model(),
     )

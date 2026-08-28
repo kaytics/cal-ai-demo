@@ -15,8 +15,14 @@ _DEFAULT_MODEL = "inclusionai/ling-3.0-flash"
 
 def default_model() -> str:
     """The planner model. `PLANNER_MODEL` overrides; a balanced open model by
-    default. The narrator (issue #19) reads its own env with this as fallback."""
+    default."""
     return os.environ.get("PLANNER_MODEL", _DEFAULT_MODEL)
+
+
+def narrator_model() -> str:
+    """The narrator model (issue #19). `NARRATOR_MODEL` overrides; falls back to
+    the planner model so a single knob configures both by default."""
+    return os.environ.get("NARRATOR_MODEL", default_model())
 
 
 def make_llm() -> object:
