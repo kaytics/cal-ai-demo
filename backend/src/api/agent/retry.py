@@ -24,7 +24,8 @@ from __future__ import annotations
 import asyncio
 import random
 from collections.abc import Awaitable, Callable
-from typing import Protocol
+
+from api.agent.planner import ChatClient, ChatLLM
 
 # Policy defaults. Tuned for a demo: a handful of tries over a few seconds is
 # enough to ride out a short burst without making a failed request feel hung.
@@ -63,20 +64,12 @@ def _retry_after_seconds(err: BaseException) -> float | None:
         return None
 
 
-class _Chat(Protocol):
-    async def send_async(self, **kwargs: object) -> object: ...
-
-
-class _ChatLLM(Protocol):
-    chat: _Chat
-
-
 class _RetryingChat:
     """Wraps a chat client, retrying `send_async` on 429."""
 
     def __init__(
         self,
-        inner: _Chat,
+        inner: ChatClient,
         *,
         max_attempts: int,
         base_delay: float,
@@ -125,7 +118,7 @@ class RetryingLLM:
 
     def __init__(
         self,
-        inner: _ChatLLM,
+        inner: ChatLLM,
         *,
         max_attempts: int = DEFAULT_MAX_ATTEMPTS,
         base_delay: float = DEFAULT_BASE_DELAY,

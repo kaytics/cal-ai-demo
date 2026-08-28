@@ -25,7 +25,10 @@ _SYSTEM = (
 )
 
 
-class _Chat(Protocol):
+class ChatClient(Protocol):
+    """The chat sub-client the agent drives: `send_async(**kwargs)`. Both the
+    planner (non-streaming) and narrator (streaming) call through it."""
+
     async def send_async(self, **kwargs: object) -> object: ...
 
 
@@ -35,7 +38,7 @@ class ChatLLM(Protocol):
     async API lets the planner (non-streaming) and narrator (streaming) run
     natively on the event loop."""
 
-    chat: _Chat
+    chat: ChatClient
 
 
 def _to_openai_tools(mcp_tools: list[object]) -> list[dict[str, object]]:
